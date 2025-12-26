@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>POS | Market Vida</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* Efecto de Ticket dentado (decorativo) */
+        .ticket-jagged {
+            background-image: linear-gradient(135deg, transparent 50%, white 50%), linear-gradient(45deg, white 50%, transparent 50%);
+            background-position: bottom;
+            background-size: 16px 16px;
+            background-repeat: repeat-x;
+            height: 16px;
+            width: 100%;
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen flex flex-col overflow-hidden font-sans">
+
+    <header class="bg-slate-900 text-white p-3 shadow-lg z-30 shrink-0 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <button onclick="window.location.href='cajero_dashboard.html'" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition">
+                <i class="fa-solid fa-arrow-left"></i> SALIR
+            </button>
+            <h1 class="font-bold text-lg tracking-wide hidden md:block">PUNTO DE VENTA</h1>
+        </div>
+        <div class="text-right flex items-center gap-4">
+            <div>
+                <p id="cajeroName" class="text-xs font-bold text-sky-400">CAJERO</p>
+                <p id="reloj" class="text-[10px] text-slate-400 font-mono">--:--</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <div class="flex-1 flex flex-col relative bg-slate-100">
+            <div class="bg-white p-2 shadow-sm z-10 shrink-0 border-b border-slate-200">
+                <div id="tabs" class="flex gap-2 overflow-x-auto no-scrollbar"></div>
+            </div>
+            <div class="p-4 pb-2 shrink-0">
+                <div class="relative">
+                    <i class="fa-solid fa-barcode absolute left-4 top-3.5 text-slate-400"></i>
+                    <input type="text" id="busqueda" placeholder="Buscar producto..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none font-bold text-slate-700 shadow-sm uppercase">
+                </div>
+            </div>
+            <div id="grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 content-start pb-20"></div>
+        </div>
+
+        <div class="w-96 bg-white shadow-2xl z-20 flex flex-col border-l border-slate-200">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="font-black text-slate-700 text-lg"><i class="fa-solid fa-cart-shopping text-sky-600 mr-2"></i> TICKET</h2>
+                <button onclick="limpiarCarrito()" class="text-xs text-red-500 font-bold hover:underline">BORRAR</button>
+            </div>
+            <div id="carritoLista" class="flex-1 overflow-y-auto p-2 space-y-1 bg-slate-50"></div>
+            <div class="p-6 bg-white border-t border-slate-200 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-40">
+                <div class="flex justify-between items-end mb-4">
+                    <span class="text-slate-500 font-bold text-xs uppercase">Total a Pagar</span>
+                    <span id="txtTotal" class="text-4xl font-black text-slate-800 tracking-tighter">S/. 0.00</span>
+                </div>
+                <button onclick="cobrar()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold text-xl shadow-lg shadow-emerald-200 transition transform active:scale-95 flex justify-center items-center gap-2">
+                    COBRAR <i class="fa-solid fa-money-bill-wave"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalTicket" class="fixed inset-0 bg-slate-900/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-80 rounded-t-lg shadow-2xl relative animate-bounce-in flex flex-col max-h-[90vh]">
+            
+            <div class="bg-emerald-500 p-4 text-center rounded-t-lg">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto text-emerald-500 text-2xl shadow-lg">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="text-white font-bold mt-2">¡Venta Exitosa!</h3>
+            </div>
+
+            <div class="p-6 bg-white overflow-y-auto custom-scroll">
+                <div class="text-center mb-4">
+                    <h2 class="font-black text-slate-800 text-xl tracking-tight">MARKET VIDA</h2>
+                    <p class="text-xs text-slate-400">RUC: 20555555551</p>
+                    <p class="text-xs text-slate-400" id="ticketFecha">...</p>
+                </div>
+
+                <div class="border-t border-b border-dashed border-slate-300 py-3 mb-4 space-y-2 text-sm text-slate-600" id="ticketItems">
+                    </div>
+
+                <div class="flex justify-between items-end">
+                    <span class="text-slate-500 font-bold text-xs">TOTAL PAGADO</span>
+                    <span class="text-2xl font-black text-slate-800" id="ticketTotal">S/. 0.00</span>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-b-lg border-t border-slate-100 relative">
+                <div class="ticket-jagged"></div> <button onclick="cerrarTicket()" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3 rounded-xl font-bold shadow-lg transition">
+                    NUEVA VENTA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .animate-bounce-in { animation: bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        @keyframes bounceIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+
+    <script type="module" src="pos.js"></script>
+</body>
+</html>

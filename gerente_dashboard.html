@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Gerente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-100 h-screen flex overflow-hidden">
+    <aside id="sidebar" class="w-64 bg-slate-900 flex flex-col shrink-0 transition-all duration-300"></aside>
+    
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white p-4 shadow-sm z-10 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-slate-800">Resumen General</h2>
+            <div id="reloj" class="text-xs font-mono text-slate-400">...</div>
+        </header>
+        
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Ventas Hoy</p>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1" id="kpiTotal">S/. 0.00</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-sky-100 rounded-xl flex items-center justify-center text-sky-600 text-xl"><i class="fa-solid fa-sack-dollar"></i></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Tickets</p>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1" id="kpiCount">0</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 text-xl"><i class="fa-solid fa-receipt"></i></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold uppercase">Personal Activo</p>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1" id="kpiStaff">0</h3>
+                    </div>
+                    <div class="h-12 w-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 text-xl"><i class="fa-solid fa-users"></i></div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-96 flex items-center justify-center text-slate-400">
+                <p>Aquí irían los gráficos (Chart.js) en la siguiente fase.</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderSidebar } from './gerente_layout.js';
+        import { supabase, formatoMoneda, iniciarReloj } from './config.js';
+        import { checkAuth } from './auth.js';
+        
+        checkAuth('gerente');
+        renderSidebar('dash');
+        iniciarReloj('reloj');
+
+        async function load() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const { data: v } = await supabase.from('ventas').select('total').gte('fecha_hora', hoy);
+            const total = v?.reduce((acc, curr) => acc + curr.total, 0) || 0;
+            
+            document.getElementById('kpiTotal').innerText = formatoMoneda.format(total);
+            document.getElementById('kpiCount').innerText = v?.length || 0;
+            
+            const { data: u } = await supabase.from('usuarios').select('id').eq('activo', true);
+            document.getElementById('kpiStaff').innerText = u?.length || 0;
+        }
+        load();
+    </script>
+</body>
+</html>

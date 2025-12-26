@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-100 h-screen flex overflow-hidden">
+    <aside id="sidebar" class="w-64 bg-slate-900 flex flex-col shrink-0"></aside>
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white p-4 shadow-sm z-10"><h2 class="text-xl font-bold text-slate-800">Supervisión Inventario</h2></header>
+        <div class="flex-1 overflow-y-auto p-8" id="invContent">
+            <div class="bg-white p-10 rounded-2xl shadow-sm text-center">
+                <h3 class="text-lg font-bold">Acceso Directo a Almacén</h3>
+                <p class="text-slate-500 mb-4">Para editar productos, usa la interfaz completa.</p>
+                <button onclick="window.location.href='bodega_dashboard.html'" class="bg-sky-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-sky-700">Ir al Panel de Bodega</button>
+            </div>
+        </div>
+    </main>
+    <script type="module">
+        import { renderSidebar } from './gerente_layout.js';
+        import { checkAuth } from './auth.js';
+        checkAuth('gerente');
+        renderSidebar('inv');
+    </script>
+</body>
+</html>

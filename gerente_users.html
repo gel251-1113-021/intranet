@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión Usuarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-100 h-screen flex overflow-hidden">
+    <aside id="sidebar" class="w-64 bg-slate-900 flex flex-col shrink-0"></aside>
+    
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white p-4 shadow-sm z-10"><h2 class="text-xl font-bold text-slate-800">Control de Personal</h2></header>
+        
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+                <h3 class="font-bold text-slate-700 mb-4 pb-2 border-b">Registrar Nuevo Empleado</h3>
+                <form id="formUser" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="nombre" placeholder="Nombre Completo" class="border border-slate-200 p-3 rounded-lg text-sm" required>
+                    <input type="text" id="codigo" placeholder="Código (Ej: CAJA2)" class="border border-slate-200 p-3 rounded-lg text-sm font-mono uppercase" required>
+                    <select id="rol" class="border border-slate-200 p-3 rounded-lg text-sm bg-white">
+                        <option value="cajero">Cajero</option>
+                        <option value="inventario">Almacenero</option>
+                        <option value="gerente">Gerente</option>
+                    </select>
+                    <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg shadow-md transition">
+                        <i class="fa-solid fa-plus mr-2"></i> CREAR
+                    </button>
+                    <p class="col-span-4 text-[10px] text-slate-400">* La contraseña inicial será idéntica al código.</p>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+                        <tr><th class="p-4">Empleado</th><th class="p-4">Rol</th><th class="p-4">Estado</th><th class="p-4 text-center">Acción</th></tr>
+                    </thead>
+                    <tbody id="lista" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderSidebar } from './gerente_layout.js';
+        import { supabase } from './config.js';
+        import { toast } from './ui.js';
+        import { checkAuth } from './auth.js';
+
+        checkAuth('gerente');
+        renderSidebar('users');
+
+        async function load() {
+            const { data } = await supabase.from('usuarios').select('*').order('id');
+            document.getElementById('lista').innerHTML = data.map(u => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4"><div class="font-bold text-slate-800">${u.nombre_completo}</div><div class="text-xs text-slate-400 font-mono">${u.codigo}</div></td>
+                    <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold uppercase">${u.rol}</span></td>
+                    <td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-bold ${u.activo?'bg-green-100 text-green-600':'bg-red-100 text-red-600'}">${u.activo?'ACTIVO':'INACTIVO'}</span></td>
+                    <td class="p-4 text-center"><button onclick="toggle('${u.id}', ${u.activo})" class="text-slate-400 hover:text-sky-600"><i class="fa-solid fa-power-off"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('formUser').onsubmit = async (e) => {
+            e.preventDefault();
+            const n = document.getElementById('nombre').value;
+            const c = document.getElementById('codigo').value.toUpperCase().trim();
+            const r = document.getElementById('rol').value;
+            const { error } = await supabase.from('usuarios').insert([{nombre_completo: n, codigo: c, password: c, rol: r}]);
+            if(error) toast('Error al crear usuario', 'error');
+            else { toast('Usuario creado'); document.getElementById('formUser').reset(); load(); }
+        };
+
+        window.toggle = async (id, st) => {
+            if(confirm('¿Cambiar estado?')) {
+                await supabase.from('usuarios').update({activo: !st}).eq('id', id);
+                load();
+            }
+        }
+        load();
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+
+/* Navegación activa */
+.nav-active { background-color: #0284c7; color: white; box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.4); }
+.nav-inactive { color: #94a3b8; }
+.nav-inactive:hover { background-color: #1e293b; color: white; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); }

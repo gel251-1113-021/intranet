@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Comunicados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-100 h-screen flex overflow-hidden">
+    <aside id="sidebar" class="w-64 bg-slate-900 flex flex-col shrink-0"></aside>
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white p-4 shadow-sm z-10"><h2 class="text-xl font-bold text-slate-800">Mensajería Interna</h2></header>
+        <div class="p-8 flex-1 overflow-y-auto">
+            <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
+                <input type="text" id="title" placeholder="Asunto" class="w-full border p-3 rounded-lg mb-3 font-bold">
+                <textarea id="msg" class="w-full border p-3 rounded-lg h-24 mb-3" placeholder="Mensaje..."></textarea>
+                <button id="send" class="bg-sky-600 text-white px-6 py-2 rounded-lg font-bold">PUBLICAR</button>
+            </div>
+            <div id="list" class="space-y-4"></div>
+        </div>
+    </main>
+    <script type="module">
+        import { renderSidebar } from './gerente_layout.js';
+        import { supabase } from './config.js';
+        import { toast } from './ui.js';
+        import { checkAuth } from './auth.js';
+        checkAuth('gerente');
+        renderSidebar('comms');
+
+        async function load() {
+            const { data } = await supabase.from('comunicados').select('*').order('id', {ascending:false});
+            document.getElementById('list').innerHTML = data.map(c => `
+                <div class="bg-white p-4 rounded-xl border-l-4 border-sky-500 shadow-sm">
+                    <h3 class="font-bold text-slate-800">${c.titulo}</h3>
+                    <p class="text-slate-600">${c.mensaje}</p>
+                    <p class="text-xs text-slate-400 mt-2">${new Date(c.fecha_creacion).toLocaleString()}</p>
+                </div>
+            `).join('');
+        }
+        document.getElementById('send').onclick = async () => {
+            const t = document.getElementById('title').value;
+            const m = document.getElementById('msg').value;
+            if(!t || !m) return;
+            await supabase.from('comunicados').insert([{titulo: t, mensaje: m}]);
+            toast('Publicado'); load();
+        };
+        load();
+    </script>
+</body>
+</html>
